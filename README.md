@@ -1,5 +1,5 @@
 # s3-db-backup
-PRogram to backup a MySQL database to an S3 bucket
+Program to backup a MySQL database to an S3 bucket
 
 A simple program that I use to backup several MySQL databases to various S3 buckets.
 
