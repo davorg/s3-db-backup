@@ -56,7 +56,7 @@ my $BUCKET = $OPT{B};
             unlink $_ or die "Can't delete $_: $!\n";
             if ($BUCKET) {
                 note("Deleting $_ from S3");
-                system "s3cmd del s3://$BUCKET/$_";
+                system "s3cmd --no-progress del s3://$BUCKET/$_";
             }
         }
     }
@@ -79,7 +79,7 @@ sub backup {
     }
 
     if ($BUCKET && -e $output_file) {
-        system "s3cmd put $output_file s3://$BUCKET/";
+        system "s3cmd --no-progress put $output_file s3://$BUCKET/";
     }
 }
 
