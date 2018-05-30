@@ -14,33 +14,36 @@ Back up databases, and clean up old backups.  Expects to be run hourly.
 
 Options:
 
-  -v  Verbose mode
-  -u USER
+  --verbose Verbose mode
+  --username USER
       Connect to the database as the given USER (required)
-  -p PASSWORD
+  --password PASSWORD
       Connect to the database with the given PASSWORD
-  -d BACKUP_DIR
+  --directory BACKUP_DIR
       Store and delete backups in the given BACKUP_DIR (required)
-  -P PREFIX
+  --Prefix PREFIX
       Fixed part of filename
-  -B Amazon S3 bucket to use
+  --Bucket Amazon S3 bucket to use
 
 EOF
-GetOptions(\my %OPT, qw<help|? v u=s p=s d=s t=s P=s B=s>) or die $USAGE;
+GetOptions(\my %OPT, qw<help|? version username=s password=s database|db=s
+                        directory=s timestamp=s Prefix=s Bucket=s>
+    or die $USAGE;
+
 if ($OPT{help}) {
     print $USAGE;
     exit 0;
 }
 
-for (qw<u d>) {
+for (qw<username database>) {
     die "The -$_ option is required" if !exists $OPT{$_};
 }
 
-my $PREFIX = $OPT{P} || 'magnum_db.sql';
-my $BUCKET = $OPT{B};
+my $PREFIX = $OPT{Prefix} || 'magnum_db.sql';
+my $BUCKET = $OPT{Bucket};
 
 {
-    chdir $OPT{d} or die "Can't chdir to $OPT{d}: $!\n";
+    chdir $OPT{directory} or die "Can't chdir to $OPT{direcotry}: $!\n";
     my $now = now();
     my %wanted = map { $_ => 1 } times_to_keep($now);
     my @to_delete;
@@ -68,13 +71,13 @@ sub backup {
 
     $output_file .= '.gz' unless $output_file =~ /\.gz$/;
 
-    my @creds = "-u\Q$OPT{u}\E";
-    push @creds, "-p\Q$OPT{p}\E" if exists $OPT{p};
+    my @creds = "-u\Q$OPT{username}\E";
+    push @creds, "-p\Q$OPT{password}\E" if exists $OPT{password};
 
     system "mysqldump --opt @creds --all-databases | gzip > \Q$output_file\E";
     if ($? != 0) {
         unlink $output_file
-            or die "Can't delete incomplete $OPT{d}/$output_file: $!\n";
+            or die "Can't delete incomplete $OPT{directory}/$output_file: $!\n";
         die "mysqldump exited unsuccessfully; no backup created\n";
     }
 
@@ -85,9 +88,9 @@ sub backup {
 
 sub now {
 
-    return DateTime->now if !$OPT{t};
+    return DateTime->now if !$OPT{timestamp};
     my $rx = join '[^0-9]', ('([0-9]+)') x 6;
-    my ($y, $m, $d, $h, $i, $s) = $OPT{t} =~ /\A$rx\z/xms
+    my ($y, $m, $d, $h, $i, $s) = $OPT{timestamp} =~ /\A$rx\z/xms
         or die "Can't parse date/time\n";
     return DateTime->new(
         year => $y, month  => $m, day    => $d,
@@ -117,5 +120,5 @@ sub times_to_keep {
 }
 
 sub note {
-    say STDERR @_ if $OPT{v};
+    say STDERR @_ if $OPT{verbose};
 }
