@@ -43,7 +43,7 @@ my $BUCKET = $OPT{B};
 
 Log::Log4perl->easy_init({
   level => $INFO,
-  file  => '>>backup.log',
+  file  => ">>$OPT{d}/backup.log",
 });
 
 {
