@@ -24,6 +24,7 @@ Options:
   -P PREFIX
       Fixed part of filename
   -B Amazon S3 bucket to use
+  -t The date and time to use (defaults to using the current time)
 
 EOF
 GetOptions(\my %OPT, qw<help|? v u=s p=s d=s t=s P=s B=s>) or die $USAGE;
